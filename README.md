@@ -15,7 +15,7 @@ Run locally with `node server.js` and open http://localhost:8419.
 Nothing stores positions. Every time the sheet is read, the ladder is **replayed from the start**, in date order. Fixing a row in the sheet therefore fixes everything after it, and every player's rank history comes for free.
 
 - **Joins:** each player enters on their Joined date at their Entry Position (blank means the bottom), and everyone below moves down one. The launch-day seeding is just everyone's Entry Position on the launch date.
-- **Results:** if the lower-ranked player wins, they take the loser's place and everyone in between moves down one (leapfrog). If the higher-ranked player wins, nothing changes. This applies to challenges, placement matches, forfeits, and League / TSA / Club Champs / club ladder results. Friendlies and incomplete matches are shown but never count.
+- **Results:** if the lower-ranked player wins, they take the loser's place and everyone in between moves down one (leapfrog). If the higher-ranked player wins, nothing changes. This applies to challenges, placement matches, forfeits, and League / TSA / Club Champs / club ladder results. Incomplete (rain-abandoned) matches are shown but never count. Friendlies aren't entered at all.
 - **Forfeits:** three in a row costs a further 5 places. Any completed match resets the count.
 - **Injury and illness freezes:** you hold your place for 2 weeks, then drop 1, then 2 more, 3 more and so on every 2 weeks until the freeze's To date. (The rules say "continuing by an additional spot". Read here as 6, 7, … more each fortnight; Fin to confirm.)
 - **Challenge range:** up to 4 places up, skipping frozen players. Newcomers get one placement match (capped at #2), and their first challenge counts as it.
@@ -60,7 +60,7 @@ One Google Sheet (the Director's copy has a Guide tab explaining each tab to Fin
 |---|---|
 | Date, Player 1, Player 2, Winner | |
 | Score | Either player's side, e.g. `6-4 3-6 10-7` (a third set of 10+ reads as a match tiebreak), `7-6(5) 6-2`, `6-4 2-1 ret`. |
-| Type | Challenge (default), Placement, Forfeit, League, TSA, Club Champs, Club Ladder, Incomplete, Friendly. |
+| Type | Challenge (default), Placement, Forfeit, League, TSA, Club Champs, Club Ladder, Incomplete. Friendlies are not entered. |
 | Event | E.g. "WP Masters", shown next to the result. |
 | Challenge | Optional ID from the Challenges tab. Blank links to the open challenge between the same two players. |
 

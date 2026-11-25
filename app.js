@@ -1,7 +1,8 @@
 // The site: one page, hash routes, everything drawn from /api/ladder.
 //   #/                ladder            #/p/<player>[/<page>]  player profile
-//   #/fixtures[/<n>]  challenges and results               #/stats[/<table>]  alternate tables
-//   #/rules[/<part>]  #/about  #/join  #/credits           #/checks  the Director's checks (needs the key)
+//   #/fixtures        challenges lined up                  #/results[/<n>]  results, newest first
+//   #/stats[/<table>] alternate tables                     #/rules[/<part>]  full rules   #/rules/how-it-works  short version
+//   #/about  #/join  #/credits                             #/checks  the Director's checks (needs the key)
 (() => {
   const $ = s => document.querySelector(s);
   const main = $('#main');
@@ -15,6 +16,7 @@
   let lastRoute = '';
   const filters = JSON.parse(store.get('ladder-filters') || '{}');
   const showAll = { results: store.get('ladder-results-all') !== 'no' };
+  let view = store.get('ladder-view') || 'list'; // the ladder as a compact full list, or the detailed table
 
   // ---------- formatting ----------
 
@@ -102,7 +104,7 @@
     const r = route();
     const nav = { p: 'ladder', checks: '' }[r.page] ?? r.page;
     document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === nav));
-    const pages = { ladder, p: profile, fixtures, stats, rules: staticPage, about: staticPage, join: staticPage, credits: staticPage, checks };
+    const pages = { ladder, p: profile, fixtures, results, stats, rules: staticPage, about: staticPage, join: staticPage, credits: staticPage, checks };
     (pages[r.page] || ladder)(r);
     const key = `${r.page}/${r.arg}`;
     if (navigated && key !== lastRoute) {
@@ -128,6 +130,21 @@
   // ---------- ladder ----------
 
   function ladder() {
+    // Compact: the whole ladder at a glance, in columns on a wide screen.
+    const items = D.ladder.map(k => {
+      const p = P(k);
+      const pend = D.pending[k] ? D.fixtures.find(f => f.id === D.pending[k]) : null;
+      const opp = pend ? (pend.challenger === k ? pend.defender : pend.challenger) : '';
+      const can = me && me !== k ? Ladder.canChallenge(D, me, k) : null;
+      const marks = [
+        p.frozen ? `<span class="ic frozen" title="${esc(frozenText(p.frozen))}">❄</span>` : '',
+        pend ? `<span class="ic match" title="Challenge lined up v ${esc(P(opp).name)}">⚔</span>` : '',
+        p.placementDue ? '<span class="ic new" title="New: placement match due">New</span>' : '',
+        can?.ok ? `<span class="can-tag" title="${esc(can.why)}">Challenge</span>` : '',
+      ].join('');
+      return `<li class="${k === me ? 'me' : ''}${p.frozen ? ' is-frozen' : ''}${can?.ok ? ' can' : ''}"><a href="#/p/${k}">
+        <span class="rank r${p.rank}">${p.rank}</span>${moveTag(p.rank, p.rank7)}${badge(p.club)}<span class="nm">${esc(p.name)}</span>${marks}</a></li>`;
+    }).join('');
     const rows = D.ladder.map(k => {
       const p = P(k), s = p.stats;
       const pend = D.pending[k] ? D.fixtures.find(f => f.id === D.pending[k]) : null;
@@ -161,17 +178,22 @@
       kicker: `${D.ladder.length} players · challenge up to ${D.settings.challengeRange} places up`,
       title: 'The Ladder',
       cls: 'board-ladder',
-      tools: `<div class="me-row">${mePicker()}<p class="me-note">${myBit}</p></div>`,
-      body: `<table class="ladder">
+      tools: `<div class="me-row">${mePicker()}<p class="me-note">${myBit}</p></div>
+        <div class="seg" role="group" aria-label="Ladder view"><button type="button" data-view="list" class="${view === 'list' ? 'on' : ''}">Full list</button><button type="button" data-view="detail" class="${view === 'detail' ? 'on' : ''}">Detailed</button></div>`,
+      body: (view === 'list'
+        ? `<ol class="ladder-list">${items}</ol>`
+        : `<table class="ladder">
         <thead><tr><th>#</th><th class="mvc"><span class="sr">Move</span></th><th>Player</th><th class="hide-sm">Form</th><th class="num">W–L</th><th class="cc"></th></tr></thead>
-        <tbody>${rows}</tbody></table>
-        <p class="foot-note">▲▼ is movement over the last 7 days. ❄ frozen players can't be challenged, and they don't count towards your ${D.settings.challengeRange}-place range. Tap a player for their profile.</p>`,
+        <tbody>${rows}</tbody></table>`) +
+        `<p class="foot-note">▲▼ is movement over the last 7 days. ❄ frozen players can't be challenged, and they don't count towards your ${D.settings.challengeRange}-place range. ⚔ has a challenge lined up. Tap a player for their profile.</p>`,
     }) + `<div class="duo">
       ${panel({ kicker: 'Latest', title: 'Movements', body: moves ? `<ul class="moves">${moves}</ul>` : '<p class="empty">No movement yet.</p>' })}
-      ${panel({ kicker: 'Coming up', title: `${plural(lined, 'challenge')} lined up`, body: upcoming(4) + '<p class="more"><a href="#/fixtures">All fixtures and results →</a></p>' })}
+      ${panel({ kicker: 'Coming up', title: `${plural(lined, 'challenge')} lined up`, body: upcoming(4) + '<p class="more"><a href="#/fixtures">All fixtures →</a> · <a href="#/results">Results →</a></p>' })}
     </div>`;
   }
   main.addEventListener('click', e => {
+    const v = e.target.closest('[data-view]');
+    if (v) { view = v.dataset.view; store.set('ladder-view', view === 'list' ? '' : view); render(false); return; }
     const tr = e.target.closest('tr[data-href]');
     if (tr && !e.target.closest('a,button,select')) location.hash = tr.dataset.href;
   });
@@ -220,22 +242,26 @@
     if (pages <= 1) return '';
     return `<nav class="pager">${page > 1 ? `<a href="${base}/${page - 1}">← Newer</a>` : '<span></span>'}<span>Page ${page} of ${pages}</span>${page < pages ? `<a href="${base}/${page + 1}">Older →</a>` : '<span></span>'}</nav>`;
   }
-  function fixtures(r) {
+  function fixtures() {
+    main.innerHTML = panel({
+      kicker: `Play within ${D.settings.matchWindowDays} days of the challenge`,
+      title: 'Fixtures',
+      body: upcoming() + `<p class="foot-note">Challenges and agreed dates go to ${esc(D.settings.director)}, who adds them here. To challenge someone, open their profile. <a href="#/results">Results →</a></p>`,
+    });
+  }
+  function results(r) {
     const per = 15;
+    const hasIncomplete = D.matches.some(m => !m.counts);
     const list = D.matches.filter(m => showAll.results || m.counts);
     const pages = Math.max(1, Math.ceil(list.length / per));
     const page = Math.min(Math.max(+r.arg || 1, 1), pages);
     main.innerHTML = panel({
-      kicker: `Play within ${D.settings.matchWindowDays} days of the challenge`,
-      title: 'Lined up',
-      body: upcoming() + `<p class="foot-note">Challenges and agreed dates go to ${esc(D.settings.director)}, who adds them here. To challenge someone, open their profile.</p>`,
-    }) + panel({
       kicker: `${plural(D.matches.filter(m => m.counts).length, 'ladder result')}`,
       title: 'Results',
-      tools: `<label class="check"><input type="checkbox" id="all-results"${showAll.results ? ' checked' : ''}> Include friendlies and incomplete matches</label>`,
-      body: list.length ? `<ul class="results">${list.slice((page - 1) * per, page * per).map(m => resultRow(m)).join('')}</ul>${pager('#/fixtures', page, pages)}` : '<p class="empty">No results yet.</p>',
+      tools: hasIncomplete ? `<label class="check"><input type="checkbox" id="all-results"${showAll.results ? ' checked' : ''}> Include incomplete matches</label>` : '',
+      body: list.length ? `<ul class="results">${list.slice((page - 1) * per, page * per).map(m => resultRow(m)).join('')}</ul>${pager('#/results', page, pages)}` : '<p class="empty">No results yet.</p>',
     });
-    $('#all-results').addEventListener('change', e => { showAll.results = e.target.checked; store.set('ladder-results-all', e.target.checked ? '' : 'no'); render(false); });
+    $('#all-results')?.addEventListener('change', e => { showAll.results = e.target.checked; store.set('ladder-results-all', e.target.checked ? '' : 'no'); render(false); });
   }
 
   // ---------- profile ----------
@@ -373,9 +399,11 @@
   // ---------- fixed pages ----------
 
   function staticPage(r) {
-    const titles = { rules: ['Official rules', 'Rules'], about: ['Cape Town Singles Ladder', 'About'], join: ['Men\'s singles, all clubs', 'Join the ladder'], credits: ['With thanks', 'Credits'] };
+    const short = r.page === 'rules' && r.arg === 'how-it-works';
+    const titles = { rules: short ? ['The rules, short version', 'How it works'] : ['Official rules', 'Rules'], about: ['Cape Town Singles Ladder', 'About'], join: ['Men\'s singles, all clubs', 'Join the ladder'], credits: ['With thanks', 'Credits'] };
     const [kicker, title] = titles[r.page];
-    main.innerHTML = panel({ kicker, title, cls: 'paper', body: window.Pages[r.page](D.settings) });
+    const tools = r.page === 'rules' ? `<nav class="tabs"><a href="#/rules"${short ? '' : ' class="on"'}>Full rules</a><a href="#/rules/how-it-works"${short ? ' class="on"' : ''}>How it works</a></nav>` : '';
+    main.innerHTML = panel({ kicker, title, tools, cls: 'paper', body: window.Pages[short ? 'howItWorks' : r.page](D.settings) });
   }
 
   // ---------- the Director's checks ----------

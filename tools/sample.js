@@ -109,11 +109,10 @@ for (const d of days) {
   }
   for (let i = toPlay.length - 1; i >= 0; i--) if (toPlay[i].date === d && !toPlay[i].rain && toPlay[i].row[4] !== 'Rain') toPlay.splice(i, 1);
 
-  // External results: a TSA tournament and Singles League fixtures between ladder players.
+  // External results: a TSA tournament and a Singles League fixture between ladder players. (Friendlies are never entered.)
   if (d === '2026-10-18') matches.push([d, 'P15', 'P06', winner('P15', 'P06'), '6-4 7-5', 'TSA', 'WP Masters', '', '']);
   if (d === '2026-10-19') matches.push([d, 'P19', 'P08', 'P19', '7-6(4) 3-6 6-4', 'TSA', 'WP Masters', '', '']);
   if (d === '2026-11-07') matches.push([d, 'P12', 'P05', winner('P12', 'P05'), '6-3 6-4', 'League', 'CT Singles League R4', '', '']);
-  if (d === '2026-11-14') matches.push([d, 'P22', 'P17', 'P17', '6-2 6-1', 'Friendly', '', '', 'Practice set']);
   if (d === '2026-10-25') matches.push([d, 'P09', 'P11', 'P11', '6-4 2-3', 'Incomplete', '', '', 'Rain, not continued']);
 
   // The newcomer's placement match.
