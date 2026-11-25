@@ -98,3 +98,20 @@ test('scores read from either side', () => {
   assert.strictEqual(L.parseScore('4-6 6-3 7-10').text, '6-4 3-6 [10-7]');
   assert.strictEqual(L.parseScore('7-6(5) 6-2').gamesW, 13);
 });
+
+test('the festive break in Settings freezes everyone, and a player injury still shows', () => {
+  const t = tabs({ freezes: [[P(3), 'Injury', '2026-12-10', '', 'TRUE']] });
+  const during = L.build(t, '2026-12-25');
+  assert.strictEqual(during.frozenNow.size, 10);
+  assert.strictEqual(during.frozenNow.get(P(1)).reason, 'festive');
+  assert.strictEqual(during.frozenNow.get(P(3)).reason, 'injury');
+  const after = L.build(t, '2027-01-04');
+  assert.strictEqual(after.frozenNow.has(P(1)), false);
+});
+
+test('empty sheet rows holding only an unticked checkbox are ignored', () => {
+  const t = tabs({ freezes: [['', '', '', '', 'FALSE'], ['', '', '', '', 'FALSE']] });
+  const m = L.build(t, '2026-11-25');
+  assert.strictEqual(m.warnings.length, 0);
+  assert.strictEqual(m.freezes.filter(f => !f.auto).length, 0);
+});

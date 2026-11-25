@@ -38,11 +38,12 @@ It never changes anything: the Director decides.
 
 ## The sheet
 
-One Google Sheet with these tabs. Header names matter, but column order and capitals don't, and extra columns are ignored. Player cells can hold the player's **ID or full name**. A data-validation dropdown from the Players tab makes typos impossible. Dates can be `2026-11-25`, `2026/11/25` or `25/11/2026`.
+One Google Sheet (the Director's copy has a Guide tab explaining each tab to Fin) with these tabs. Header names matter, but column order and capitals don't, and extra columns are ignored. Player cells can hold the player's **ID or full name**. A data-validation dropdown from the Players tab makes typos impossible. Dates can be `2026-11-25`, `2026/11/25` or `25/11/2026`.
 
 **Players**: everyone who's ever been on the ladder.
 | Column | Notes |
 |---|---|
+| Full Name | Filled in by a formula (First + Last Name) and used for the player dropdowns on the other tabs. Ignored by the site. |
 | ID | Optional short code (P01…). Blank uses the full name. |
 | First Name, Last Name | Private. The site shows "David A." (more of the surname when two would clash, "van W." for particles). |
 | Display Name | Optional override for the public name. |
@@ -75,9 +76,9 @@ One Google Sheet with these tabs. Header names matter, but column order and capi
 **Freezes**
 | Column | Notes |
 |---|---|
-| Player, Reason | Holiday, Injury, Illness, League, TSA, Club Champs, Festive. |
+| Player, Reason | Holiday, Injury, Illness, Singles League, TSA tournament, Club Champs, Other. The festive break needs no rows (see Settings). |
 | From, To | Blank To means open-ended (e.g. injured until fit). |
-| Approved | Only ticked rows count, since only the Director signs off. |
+| Approved | A checkbox. Only ticked rows count, since only the Director signs off. |
 
 **Adjustments**: the Director's manual changes.
 | Column | Notes |
@@ -86,7 +87,7 @@ One Google Sheet with these tabs. Header names matter, but column order and capi
 | Action | `Move to` (Spots = new position), `Drop` (Spots = places down), `Leave`, `Warning` (shown on the profile's ladder record, no movement). |
 | Spots, Reason | |
 
-**Settings**: `Setting` / `Value` rows, all optional: Ladder Name, Director, Director WhatsApp (e.g. 27794782718), Launch Date, Challenge Range, Match Window Days, Rematch Cooldown Days, Home Club.
+**Settings**: `Setting` / `Value` rows, all optional: Ladder Name, Director, Director WhatsApp (e.g. 27794782718), Launch Date, Challenge Range, Match Window Days, Rain Window Days, Rematch Cooldown Days, Challenge Every Days, Forfeits In A Row, Forfeit Penalty Spots, Injury Grace Days, Holiday Max Days, Holiday Every Months, Festive From, Festive To, Home Club. Festive From / To freeze everyone for the festive break without any Freezes rows.
 
 ## Connecting the real sheet
 

@@ -94,7 +94,8 @@ function table(rows, required) {
       headers.forEach((h, j) => { if (h) o[h] = clean(r[j]); });
       return o;
     })
-    .filter(o => Object.keys(o).some(k => k !== '_row' && o[k]));
+    // An empty row can still hold an unticked checkbox (read as FALSE): that alone isn't data.
+    .filter(o => Object.keys(o).some(k => k !== '_row' && o[k] && !/^false$/i.test(o[k])));
 }
 
 function matchType(v) {
@@ -262,6 +263,11 @@ function build(tabs, today) {
     if (!f.from) { warn('', `Freeze for ${players.get(id).name} has no From date`, `Freezes row ${r._row}`); continue; }
     if (f.to && f.to < f.from) warn(f.from, `Freeze for ${players.get(id).name} ends before it starts`, `Freezes row ${r._row}`);
     freezes.push(f);
+  }
+  // The festive break (Settings: Festive From / Festive To) freezes everyone, with no row needed.
+  // Added last, so a player's own freeze (e.g. an injury) still wins where they overlap.
+  if (settings.festiveFrom && settings.festiveTo) {
+    for (const id of players.keys()) freezes.push({ id, reason: 'festive', from: settings.festiveFrom, to: settings.festiveTo, approved: true, row: 'Settings', auto: true });
   }
   const frozenOn = (id, date) => freezes.find(f => f.approved && f.id === id && f.from <= date && (!f.to || f.to >= date));
 
