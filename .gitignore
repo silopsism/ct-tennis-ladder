@@ -1,0 +1,5 @@
+.claude/settings.local.json
+data/
+*.key.json
+# The official rules PDF has the club's bank details: keep it out of the public repo.
+*.pdf

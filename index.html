@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cape Town Singles Ladder</title>
+  <meta name="description" content="Rankings, challenges and results for the Cape Town Singles Ladder, hosted at Claremont Tennis Club.">
+  <meta name="theme-color" content="#1f4f6e">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <!-- A blue hard court seen from above, to scale in centimetres (23.77 m × 10.97 m), with run-off. -->
+    <svg class="court" viewBox="-400 -468 3177 1617" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <rect x="-400" y="-468" width="3177" height="1617" class="runoff"/>
+      <rect x="0" y="0" width="2377" height="1097" class="surface"/>
+      <g class="lines">
+        <rect x="0" y="0" width="2377" height="1097"/>
+        <path d="M0 137H2377M0 960H2377"/>
+        <path d="M548.5 137V960M1828.5 137V960M548.5 548.5H1828.5"/>
+        <path d="M0 548.5H20M2357 548.5H2377"/>
+      </g>
+      <path class="net" d="M1188.5 -91V1188"/>
+    </svg>
+    <div class="wrap hero-inner">
+      <a class="brand" href="#/" aria-label="Cape Town Singles Ladder: rankings">
+        <svg class="ball" viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="16" cy="16" r="15"/>
+          <path d="M4.5 6.5c6 4 6 15 0 19M27.5 6.5c-6 4-6 15 0 19"/>
+        </svg>
+        <div>
+          <p class="eyebrow">Men's singles · Claremont Tennis Club</p>
+          <h1 id="ladder-name">Cape Town Singles Ladder</h1>
+        </div>
+      </a>
+      <p class="status" id="status" aria-live="polite">Loading the ladder…</p>
+    </div>
+  </header>
+
+  <nav class="nav" aria-label="Sections">
+    <div class="wrap nav-inner" id="nav">
+      <a href="#/" data-nav="ladder">Ladder</a>
+      <a href="#/fixtures" data-nav="fixtures">Fixtures</a>
+      <a href="#/stats" data-nav="stats">Stats</a>
+      <a href="#/rules" data-nav="rules">Rules</a>
+      <a href="#/about" data-nav="about">About</a>
+      <a href="#/join" data-nav="join" class="join">Join</a>
+    </div>
+  </nav>
+
+  <main class="wrap" id="main">
+    <section class="panel"><div class="panel-body"><p class="empty">Loading…</p></div></section>
+  </main>
+
+  <footer class="wrap foot">
+    <span>Hosted at <a href="https://claremonttennis.co.za/" target="_blank" rel="noopener">Claremont Tennis Club</a></span>
+    <span><a href="#/credits">Credits</a> · <a href="#/rules">Rules</a> · <a href="#/join">Join</a></span>
+  </footer>
+
+  <script src="ladder.js"></script>
+  <script src="pages.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
