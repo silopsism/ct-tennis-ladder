@@ -1,6 +1,6 @@
 FROM node:24-alpine
 WORKDIR /app
-COPY server.js ladder.js app.js pages.js index.html styles.css favicon.svg ./
+COPY server.js ladder.js app.js pages.js index.html styles.css favicon.svg logo.webp ./
 COPY sample ./sample
 # Without SHEET_ID the site shows the made-up sample ladder. Set in Coolify:
 #   SHEET_ID                the ladder sheet's ID (from its URL)

@@ -11,10 +11,11 @@ const addDays = (d, n) => new Date(Date.parse(d + 'T00:00:00Z') + n * DAY).toISO
 const daysBetween = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / DAY);
 
 const DEFAULTS = {
-  ladderName: 'Cape Town Singles Ladder',
+  ladderName: 'Cape Town Challengers Ladder',
   director: 'Fin Manjoo',
   directorWhatsApp: '27794782718',
   launchDate: '',
+  placementsFrom: '', // newcomers who join from this date owe a placement match; blank means after the Launch Date
   challengeRange: 4,
   matchWindowDays: 10,
   rainWindowDays: 7,
@@ -356,7 +357,13 @@ function build(tabs, today) {
 
   const events = [];
   for (const p of players.values()) if (p.joined) events.push({ date: p.joined, order: 0, sub: p.entry || 1e6, kind: 'join', p });
-  for (const a of adjustments) events.push({ date: a.date, order: 1, sub: a.row, kind: a.kind, a });
+  // Move rows on the same date are one event, applied together (see 'moves' below).
+  const moveDays = new Map();
+  for (const a of adjustments) {
+    if (a.kind !== 'move') { events.push({ date: a.date, order: 1, sub: a.row, kind: a.kind, a }); continue; }
+    if (!moveDays.has(a.date)) { const e = { date: a.date, order: 1, sub: a.row, kind: 'moves', list: [] }; moveDays.set(a.date, e); events.push(e); }
+    moveDays.get(a.date).list.push(a);
+  }
   for (const f of freezes.filter(f => f.approved && FREEZES[f.reason].decays)) {
     // Injury decay: hold for 2 weeks, then 1, 2, 3, 4, 5, 6… more spots every 2 weeks until fit.
     const end = f.to && f.to < today ? f.to : today;
@@ -383,6 +390,13 @@ function build(tabs, today) {
   const pair = (a, b) => [a, b].sort().join('|');
   const placementUsed = new Set();
   const nm = id => players.get(id).name;
+  // Who owes a placement match: newcomers joining from Placements From (blank: after the Launch Date).
+  // Before that (e.g. a December head start) the Director slots late entries in with Entry Position instead.
+  const needsPlacement = id => {
+    const j = players.get(id).joined;
+    if (!j) return false;
+    return settings.placementsFrom ? j >= settings.placementsFrom : !!settings.launchDate && j > settings.launchDate;
+  };
 
   const snapshot = date => {
     ladder.forEach((id, i) => {
@@ -423,12 +437,26 @@ function build(tabs, today) {
       const r = rankOf(e.a.id);
       if (r) { ladder.splice(r - 1, 1); movements.push({ date: d, kind: 'leave', id: e.a.id, text: `left the ladder (was #${r})` }); }
       record.get(e.a.id).push({ date: d, kind: 'leave', text: e.a.reason || 'Left the ladder' });
-    } else if (e.kind === 'move') {
-      const r = rankOf(e.a.id);
-      if (r) ladder.splice(r - 1, 1);
-      const to = Math.min(Math.max((e.a.spots || ladder.length + 1) - 1, 0), ladder.length);
-      ladder.splice(to, 0, e.a.id);
-      movements.push({ date: d, kind: 'move', id: e.a.id, text: `placed at #${to + 1} by the Ladder Director${e.a.reason ? ` (${e.a.reason})` : ''}` });
+    } else if (e.kind === 'moves') {
+      // The Director's Move rows for one day are applied together, so a big reshuffle comes out exactly as
+      // written: everyone moved is taken out, then put back in from the top down. Moving one player is the
+      // same thing, with everyone in between sliding one place.
+      const last = new Map();
+      for (const a of e.list) {
+        if (last.has(a.id)) warn(d, `${nm(a.id)} is moved twice on ${d}: Adjustments row ${a.row} is used`, `Adjustments row ${last.get(a.id).row}`);
+        last.set(a.id, a);
+      }
+      const list = [...last.values()].sort((x, y) => (x.spots || 1e6) - (y.spots || 1e6) || x.row - y.row);
+      list.forEach((a, i) => {
+        const twin = list[i - 1];
+        if (twin && a.spots && twin.spots === a.spots) warn(d, `${nm(twin.id)} and ${nm(a.id)} are both moved to #${a.spots}`, `Adjustments row ${a.row}`);
+      });
+      for (const a of list) { const r = rankOf(a.id); if (r) ladder.splice(r - 1, 1); }
+      for (const a of list) {
+        const to = Math.min(Math.max((a.spots || ladder.length + 1) - 1, 0), ladder.length);
+        ladder.splice(to, 0, a.id);
+        movements.push({ date: d, kind: 'move', id: a.id, text: `placed at #${to + 1} by the Ladder Director${a.reason ? ` (${a.reason})` : ''}` });
+      }
     } else if (e.kind === 'drop') {
       const moved = moveDown(e.a.id, e.a.spots);
       record.get(e.a.id).push({ date: d, kind: 'penalty', text: `${e.a.reason || 'Penalty'}: down ${moved} place${moved === 1 ? '' : 's'}` });
@@ -446,7 +474,7 @@ function build(tabs, today) {
       const cr = rankOf(c.challenger), dr = rankOf(c.defender);
       if (!cr || !dr) { warn(d, `${nm(c.challenger)} v ${nm(c.defender)}: one of them isn't on the ladder yet`, where); continue; }
       if (c.status === 'cancelled') continue;
-      const isPlacement = !placementUsed.has(c.challenger) && settings.launchDate && players.get(c.challenger).joined > settings.launchDate;
+      const isPlacement = !placementUsed.has(c.challenger) && needsPlacement(c.challenger);
       if (dr >= cr) warn(d, `${nm(c.challenger)} (#${cr}) challenged ${nm(c.defender)} (#${dr}), who isn't above them`, where);
       else if (isPlacement) { if (dr < 2) warn(d, `${nm(c.challenger)}'s placement match is against #1 (capped at #2)`, where); }
       else if (!inRange(cr, dr, d)) warn(d, `${nm(c.challenger)} (#${cr}) challenged ${nm(c.defender)} (#${dr}): more than ${settings.challengeRange} spots up`, where);
@@ -474,7 +502,7 @@ function build(tabs, today) {
         if (!p.member && !MATCH_TYPES[m.type].external && (!p.passUntil || p.passUntil < d)) warn(d, `${p.name} isn't a Claremont member and has no visitor pass for ${d}`, where);
       }
       const lower = wr > lr ? m.w : m.l, higher = wr > lr ? m.l : m.w;
-      const newcomer = settings.launchDate && players.get(lower).joined > settings.launchDate && !placementUsed.has(lower);
+      const newcomer = needsPlacement(lower) && !placementUsed.has(lower);
       if (m.type === 'challenge' && !m.challenge && !newcomer) {
         const lm = lastMet.get(pair(m.w, m.l));
         if (lm && lm !== d && daysBetween(lm, d) < settings.rematchCooldownDays) warn(d, `${nm(m.w)} v ${nm(m.l)} again within ${settings.rematchCooldownDays / 7} weeks`, where);
@@ -530,7 +558,7 @@ function build(tabs, today) {
   const stats = playerStats(players, matches, history, ladder, today);
   const placementDue = new Set();
   for (const p of players.values()) {
-    if (settings.launchDate && p.joined > settings.launchDate && !placementUsed.has(p.id) && ladder.includes(p.id)) placementDue.add(p.id);
+    if (needsPlacement(p.id) && !placementUsed.has(p.id) && ladder.includes(p.id)) placementDue.add(p.id);
   }
 
   warnings.sort((a, b) => b.date.localeCompare(a.date));
@@ -630,11 +658,10 @@ function publicView(model, extra = {}) {
     movements: model.movements.slice(-40).reverse().map(m => ({ date: m.date, kind: m.kind, p: k(m.id), other: m.other ? k(m.other) : undefined, text: m.text })),
     pending: {}, lastIssued: {}, lastMet: {},
   };
-  const year = +model.today.slice(0, 4);
   for (const p of players.values()) {
     const s = stats.get(p.id);
     out.players[p.key] = {
-      name: p.name, club: p.club, member: p.member, division: division(p.birthYear, year),
+      name: p.name, club: p.club, member: p.member, // age groups (division()) are dropped for now
       joined: p.joined, rank: s.rank, bestRank: s.bestRank, startRank: s.startRank, rank7: s.rank7, rank30: s.rank30,
       frozen: frozenNow.get(p.id) || null,
       placementDue: model.placementDue.has(p.id) || undefined,

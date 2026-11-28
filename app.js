@@ -74,7 +74,7 @@
       if (!res.ok) throw new Error(body.error || res.status);
       D = body;
       if (me && !D.players[me]) { me = ''; store.set('ladder-me', ''); }
-      $('#ladder-name').textContent = D.settings.ladderName;
+      $('#ladder-name').alt = D.settings.ladderName; // the logo is the heading
       document.title = D.settings.ladderName;
       status();
       render(false);
@@ -102,7 +102,8 @@
   function render(navigated = true) {
     if (!D) return;
     const r = route();
-    const nav = { p: 'ladder', checks: '' }[r.page] ?? r.page;
+    // "How it works" and "Join" are buttons in the header; the rest are the nav bar.
+    const nav = r.page === 'rules' && r.arg === 'how-it-works' ? 'how' : { p: 'ladder', checks: '' }[r.page] ?? r.page;
     document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === nav));
     const pages = { ladder, p: profile, fixtures, results, stats, rules: staticPage, about: staticPage, join: staticPage, credits: staticPage, checks };
     (pages[r.page] || ladder)(r);
@@ -151,7 +152,6 @@
       const opp = pend ? (pend.challenger === k ? pend.defender : pend.challenger) : '';
       const can = me && me !== k ? Ladder.canChallenge(D, me, k) : null;
       const tags = [
-        p.division ? `<span class="chip">${esc(p.division)}</span>` : '',
         p.frozen ? `<span class="chip frozen" title="${esc(frozenText(p.frozen))}">❄ ${esc(frozenText(p.frozen))}</span>` : '',
         pend ? `<span class="chip match" title="Challenge lined up">⚔ v ${esc(P(opp).name)}${pend.matchDate ? `, ${shortDate(pend.matchDate)}` : ''}</span>` : '',
         p.placementDue ? '<span class="chip new">New: placement match due</span>' : '',
@@ -200,26 +200,78 @@
 
   // ---------- fixtures ----------
 
-  function fixtureCard(f) {
-    const c = P(f.challenger), d = P(f.defender);
+  // When a fixture is (or must be) played, with its status: shared by the cards and the feature match.
+  function fxWhen(f) {
     const left = days(D.today, f.deadline);
     const when = f.status === 'confirmed' && f.matchDate
       ? `<b>${fmtDate(f.matchDate)}</b>${f.time ? `, ${esc(f.time)}` : ''}${f.venue ? ` · ${esc(f.venue)}` : ''}`
       : f.status === 'rain' ? `Rained out · replay by <b>${fmtDate(f.deadline)}</b>` : `Finding a date · play by <b>${fmtDate(f.deadline)}</b>`;
     const due = left < 0 ? `<span class="due over">${plural(-left, 'day')} overdue</span>` : left === 0 ? '<span class="due soon">Last day</span>' : `<span class="due${left <= 2 ? ' soon' : ''}">${plural(left, 'day')} left</span>`;
+    return `<span class="st st-${f.status}">${{ open: 'Open', confirmed: 'Confirmed', rain: 'Rain' }[f.status]}</span>${f.placement ? '<span class="chip new">Placement</span>' : ''}<span>${when}</span>${due}`;
+  }
+  function fixtureCard(f) {
+    const c = P(f.challenger), d = P(f.defender);
     return `<li class="fx ${f.status}">
       <div class="fx-players">
         <span class="fx-p">${badge(c.club)}<span class="fx-rank">#${f.cRank || c.rank}</span> ${link(f.challenger)}</span>
         <span class="v">v</span>
         <span class="fx-p">${badge(d.club)}<span class="fx-rank">#${f.dRank || d.rank}</span> ${link(f.defender)}</span>
       </div>
-      <div class="fx-when"><span class="st st-${f.status}">${{ open: 'Open', confirmed: 'Confirmed', rain: 'Rain' }[f.status]}</span>${f.placement ? '<span class="chip new">Placement</span>' : ''}<span>${when}</span>${due}</div>
+      <div class="fx-when">${fxWhen(f)}</div>
     </li>`;
   }
-  function upcoming(limit) {
-    const list = D.fixtures.filter(f => ['open', 'confirmed', 'rain'].includes(f.status))
-      .sort((a, b) => (a.matchDate || a.deadline).localeCompare(b.matchDate || b.deadline));
-    return list.length ? `<ul class="fixtures">${list.slice(0, limit || 99).map(fixtureCard).join('')}</ul>` : '<p class="empty">No challenges lined up.</p>';
+  const lined = () => D.fixtures.filter(f => ['open', 'confirmed', 'rain'].includes(f.status))
+    .sort((a, b) => (a.matchDate || a.deadline).localeCompare(b.matchDate || b.deadline));
+  function upcoming(limit, skip) {
+    const list = lined().filter(f => f !== skip);
+    return list.length ? `<ul class="fixtures">${list.slice(0, limit || 99).map(fixtureCard).join('')}</ul>` : `<p class="empty">No ${skip ? 'other ' : ''}challenges lined up.</p>`;
+  }
+
+  // The feature match: the biggest challenge lined up (the one with the best-ranked player), billed like a
+  // tournament headliner with a mini profile of each player.
+  function featureMatch() {
+    const top = f => [P(f.challenger).rank || 999, P(f.defender).rank || 999].sort((a, b) => a - b);
+    return lined().sort((a, b) => { const x = top(a), y = top(b); return x[0] - y[0] || x[1] - y[1]; })[0] || null;
+  }
+  function billing(k, role) {
+    const p = P(k), s = p.stats;
+    const decided = s.wins + s.losses + s.fw + s.fl;
+    const facts = [
+      ['Record', `${s.wins + s.fw}–${s.losses + s.fl}`],
+      ['Win rate', decided ? pct(s.winRate) : '–'],
+      ['Best', p.bestRank ? `#${p.bestRank}` : '–'],
+      ['Streak', s.streak > 0 ? `W${s.streak}` : s.streak < 0 ? `L${-s.streak}` : '–'],
+    ];
+    return `<a class="bill" href="#/p/${k}">
+      <span class="bill-role">${role}</span>
+      <span class="bill-rank">#${p.rank || '–'}</span>
+      <span class="bill-name">${esc(p.name)}</span>
+      <span class="bill-club">${badge(p.club)}<span>${esc(p.club || 'No club')}</span></span>
+      <span class="bill-facts">${facts.map(([l, v]) => `<span><small>${l}</small><b>${v}</b></span>`).join('')}</span>
+      <span class="bill-form">${s.form && s.form.length ? `<small>Form</small>${formDots(s.form)}` : '<small>No ladder matches yet</small>'}</span>
+    </a>`;
+  }
+  function poster(f) {
+    const met = D.matches.filter(m => m.counts && [m.w, m.l].includes(f.challenger) && [m.w, m.l].includes(f.defender));
+    const cw = met.filter(m => m.w === f.challenger).length;
+    const h2h = met.length
+      ? `Head to head: ${esc(P(f.challenger).name)} ${cw}–${met.length - cw} ${esc(P(f.defender).name)}`
+      : 'Their first meeting on the ladder';
+    return `<section class="feature" aria-label="Feature match">
+      <p class="feature-kicker"><span>★</span> Feature match <span>★</span></p>
+      <div class="feature-card">
+        ${billing(f.challenger, 'Challenger')}
+        <div class="feature-vs" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><defs><radialGradient id="felt" cx="36%" cy="30%" r="75%"><stop offset="0" stop-color="#f4fb9c"/><stop offset=".5" stop-color="#d9e64a"/><stop offset="1" stop-color="#9fae1c"/></radialGradient></defs>
+            <circle cx="32" cy="32" r="30" fill="url(#felt)"/>
+            <path class="seam" d="M9 13c12 8 12 30 0 38M55 13c-12 8-12 30 0 38"/>
+          </svg><span>VS</span>
+        </div>
+        ${billing(f.defender, 'Defender')}
+      </div>
+      <p class="feature-h2h">${h2h}</p>
+      <div class="fx-when feature-when">${fxWhen(f)}</div>
+    </section>`;
   }
   function resultRow(m, from) {
     const lead = from ? (m.w === from ? '<span class="res w">W</span>' : '<span class="res l">L</span>') : '';
@@ -243,10 +295,11 @@
     return `<nav class="pager">${page > 1 ? `<a href="${base}/${page - 1}">← Newer</a>` : '<span></span>'}<span>Page ${page} of ${pages}</span>${page < pages ? `<a href="${base}/${page + 1}">Older →</a>` : '<span></span>'}</nav>`;
   }
   function fixtures() {
-    main.innerHTML = panel({
+    const top = featureMatch();
+    main.innerHTML = (top ? poster(top) : '') + panel({
       kicker: `Play within ${D.settings.matchWindowDays} days of the challenge`,
-      title: 'Fixtures',
-      body: upcoming() + `<p class="foot-note">Challenges and agreed dates go to ${esc(D.settings.director)}, who adds them here. To challenge someone, open their profile. <a href="#/results">Results →</a></p>`,
+      title: top ? 'Also lined up' : 'Fixtures',
+      body: upcoming(0, top) + `<p class="foot-note">Challenges and agreed dates go to ${esc(D.settings.director)}, who adds them here. To challenge someone, open their profile. <a href="#/results">Results →</a></p>`,
     });
   }
   function results(r) {
@@ -338,7 +391,7 @@
       title: esc(p.name),
       cls: 'profile',
       tools: `<div class="big-rank${p.rank ? '' : ' off'}"><span>${p.rank ? `#${p.rank}` : 'Off'}</span><small>${p.rank ? moveTag(p.rank, p.rank30, 'in 30 days') + ' 30 days' : 'the ladder'}</small></div>`,
-      body: `<div class="who-line">${badge(p.club)} <span>${esc(p.club || 'No club')}</span>${p.division ? `<span class="chip">${esc(p.division)}</span>` : ''}<span class="chip">${p.member ? 'Claremont member' : 'Visitor'}</span>${p.joined ? `<span class="muted">on the ladder since ${shortDate(p.joined)}</span>` : ''}</div>
+      body: `<div class="who-line">${badge(p.club)} <span>${esc(p.club || 'No club')}</span><span class="chip">${p.member ? 'Claremont member' : 'Visitor'}</span>${p.joined ? `<span class="muted">on the ladder since ${shortDate(p.joined)}</span>` : ''}</div>
         ${p.frozen ? `<div class="banner frozen">❄ <b>${esc(p.frozen.label)}</b>${p.frozen.until ? ` until ${fmtDate(p.frozen.until)}` : ' (open-ended)'}. ${p.frozen.canIssue ? "Can't be challenged, but can still challenge." : "Can't be challenged or challenge."}${['injury', 'illness'].includes(p.frozen.reason) ? ' Injury breaks over 2 weeks cost places.' : ''}</div>` : ''}
         ${p.placementDue ? '<div class="banner new">New to the ladder: placement match due (one challenge, capped at #2, approved by the Director).</div>' : ''}
         ${pend ? `<ul class="fixtures inline">${fixtureCard(pend)}</ul>` : ''}
@@ -370,8 +423,7 @@
     const t = TABLES.find(x => x.key === r.arg) || TABLES[0];
     const ranked = D.ladder.map(k => [k, P(k)]);
     const clubs = [...new Set(ranked.map(([, p]) => p.club).filter(Boolean))].sort();
-    const divs = ['Open', '35+', '45+', '55+', '65+'].filter(d => ranked.some(([, p]) => p.division === d));
-    const keep = ([, p]) => (!filters.club || p.club === filters.club) && (!filters.div || p.division === filters.div) &&
+    const keep = ([, p]) => (!filters.club || p.club === filters.club) &&
       (!filters.member || (filters.member === 'member') === p.member);
     const rows = ranked.filter(keep).filter(([, p]) => !t.min || t.min(p.stats, p))
       .sort((a, b) => t.value(b[1].stats, b[1]) - t.value(a[1].stats, a[1]) || a[1].rank - b[1].rank);
@@ -379,7 +431,7 @@
     const body = rows.map(([k, p], i) => {
       const v = t.value(p.stats, p);
       if (v !== prev) { pos = i + 1; prev = v; }
-      return `<tr data-href="#/p/${k}"><td class="rank">${pos}</td><td><div class="who">${badge(p.club)}<div>${link(k)}<div class="tags">${p.division ? `<span class="chip">${esc(p.division)}</span>` : ''}</div></div></div></td>
+      return `<tr data-href="#/p/${k}"><td class="rank">${pos}</td><td><div class="who">${badge(p.club)}<div>${link(k)}</div></div></td>
         <td class="num big">${t.show(p.stats, p)}</td><td class="num sub hide-sm">${t.sub(p.stats, p)}</td><td class="num">#${p.rank}</td></tr>`;
     }).join('');
     const sel = (id, label, opts, val) => `<label class="flt"><span>${label}</span><select id="${id}"><option value="">All</option>${opts.map(([v, l]) => `<option value="${esc(v)}"${v === val ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
@@ -387,12 +439,12 @@
       kicker: 'Alternate tables',
       title: t.label,
       tools: `<nav class="tabs">${TABLES.map(x => `<a href="#/stats/${x.key}" class="${x === t ? 'on' : ''}">${x.label}</a>`).join('')}</nav>
-        <div class="filters">${sel('f-club', 'Club', clubs.map(c => [c, c]), filters.club)}${sel('f-div', 'Age', divs.map(d => [d, d]), filters.div)}${sel('f-member', 'Players', [['member', 'Claremont members'], ['visitor', 'Visitors']], filters.member)}</div>`,
+        <div class="filters">${sel('f-club', 'Club', clubs.map(c => [c, c]), filters.club)}${sel('f-member', 'Players', [['member', 'Claremont members'], ['visitor', 'Visitors']], filters.member)}</div>`,
       body: rows.length ? `<table class="ladder stats"><thead><tr><th>#</th><th>Player</th><th class="num">${t.label}</th><th class="num hide-sm"></th><th class="num">Ladder</th></tr></thead><tbody>${body}</tbody></table><p class="foot-note">${t.note}</p>`
         : '<p class="empty">Nobody qualifies for this table yet with these filters.</p>',
     });
-    for (const [id, f] of [['f-club', 'club'], ['f-div', 'div'], ['f-member', 'member']]) {
-      $(`#${id}`).addEventListener('change', e => { filters[f] = e.target.value; store.set('ladder-filters', JSON.stringify(filters)); render(false); });
+    for (const [id, f] of [['f-club', 'club'], ['f-member', 'member']]) {
+      $(`#${id}`)?.addEventListener('change', e => { filters[f] = e.target.value; store.set('ladder-filters', JSON.stringify(filters)); render(false); });
     }
   }
 
@@ -400,7 +452,7 @@
 
   function staticPage(r) {
     const short = r.page === 'rules' && r.arg === 'how-it-works';
-    const titles = { rules: short ? ['The rules, short version', 'How it works'] : ['Official rules', 'Rules'], about: ['Cape Town Singles Ladder', 'About'], join: ['Men\'s singles, all clubs', 'Join the ladder'], credits: ['With thanks', 'Credits'] };
+    const titles = { rules: short ? ['The rules, short version', 'How it works'] : ['Official rules', 'Rules'], about: ['Cape Town Challengers Ladder', 'About'], join: ['Men\'s singles, all clubs', 'Join the ladder'], credits: ['With thanks', 'Credits'] };
     const [kicker, title] = titles[r.page];
     const tools = r.page === 'rules' ? `<nav class="tabs"><a href="#/rules"${short ? '' : ' class="on"'}>Full rules</a><a href="#/rules/how-it-works"${short ? ' class="on"' : ''}>How it works</a></nav>` : '';
     main.innerHTML = panel({ kicker, title, tools, cls: 'paper', body: window.Pages[short ? 'howItWorks' : r.page](D.settings) });

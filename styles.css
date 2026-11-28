@@ -59,14 +59,25 @@ a { color: inherit; }
 .court .lines { fill: none; stroke: var(--court-line); stroke-width: 5; opacity: .35; }
 .court .net { stroke: var(--court-line); stroke-width: 7; opacity: .35; }
 .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgb(15 40 58 / .85), rgb(15 40 58 / .35) 70%, transparent); }
-.hero-inner { position: relative; z-index: 1; padding-top: 22px; padding-bottom: 16px; }
-.brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
-.ball { width: 40px; height: 40px; flex: none; }
-.ball circle { fill: var(--ball); }
-.ball path { fill: none; stroke: #fff; stroke-width: 2; }
+.hero-inner { position: relative; z-index: 1; padding-top: 14px; padding-bottom: 12px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px 20px; }
+.brand-h { margin: 0; line-height: 0; }
+.brand { display: inline-block; }
+.logo { display: block; height: clamp(84px, 19vw, 150px); width: auto; filter: drop-shadow(0 6px 14px rgb(0 0 0 / .35)); }
+/* "How it works" and "Join" live up here, beside the logo. */
+.hero-side { justify-self: end; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; text-align: right; }
 .eyebrow { margin: 0; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; opacity: .85; }
-h1 { margin: 0; font: 700 clamp(24px, 5vw, 38px)/1.1 var(--serif); }
-.status { margin: 10px 0 0; font-size: 13px; opacity: .92; }
+.hero-btns { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.hbtn { padding: 9px 18px; border-radius: 999px; background: var(--ball); color: #10304a; border: 2px solid var(--ball); font-weight: 700; font-size: 14px; text-decoration: none; white-space: nowrap; box-shadow: 0 3px 0 rgb(0 0 0 / .25); }
+.hbtn.ghost { background: rgb(13 39 64 / .5); color: var(--chalk); border-color: rgb(255 248 238 / .75); }
+.hbtn:hover { filter: brightness(1.08); }
+.hbtn.on { outline: 2px solid var(--chalk); outline-offset: 3px; }
+.status { grid-column: 1 / -1; margin: 4px 0 0; font-size: 13px; opacity: .92; }
+@media (max-width: 560px) {
+  .hero-inner { gap: 6px 12px; }
+  .eyebrow { font-size: 10px; letter-spacing: .1em; }
+  .hero-btns { flex-direction: column; align-items: stretch; gap: 6px; }
+  .hbtn { padding: 7px 12px; font-size: 13px; text-align: center; }
+}
 .status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ball); margin-right: 4px; }
 .status .dot.err { background: #f08a6a; }
 .status .sample { color: var(--ball); }
@@ -78,7 +89,6 @@ h1 { margin: 0; font: 700 clamp(24px, 5vw, 38px)/1.1 var(--serif); }
 .nav a { padding: 12px 12px 10px; text-decoration: none; font-weight: 600; font-size: 14px; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; }
 .nav a:hover { color: var(--ink); }
 .nav a.on { color: var(--ink); border-color: var(--accent); }
-.nav a.join { margin-left: auto; color: var(--accent); }
 
 main { padding-top: 22px; padding-bottom: 8px; }
 
@@ -195,6 +205,50 @@ select, input[type=password] { font: inherit; font-size: 14px; padding: 6px 8px;
 .due { margin-left: auto; font-size: 12px; }
 .due.soon { color: var(--gold); font-weight: 600; }
 .due.over { color: var(--loss); font-weight: 700; }
+
+/* The feature match: a headliner poster in the logo's navy, blue and ball green. */
+.feature {
+  --ink: #fff8ee; --muted: #b5cbe0; --faint: #8eaac4; --gold: var(--ball); --win: #a9d18e; --loss: #f0a184; --frost: #9fd3e6; --new: #e8c86a;
+  --line: rgb(255 255 255 / .16);
+  position: relative; overflow: hidden; isolation: isolate; margin-bottom: 22px; padding: 16px 22px 16px; border-radius: 10px; color: var(--ink);
+  background: radial-gradient(ellipse 55% 70% at 50% 0%, rgb(217 230 74 / .2), transparent 70%), linear-gradient(160deg, #0c2238, #17507a 55%, #0c2238);
+  border: 3px solid #0a1c2e; box-shadow: 0 2px 0 #06121e, 0 16px 30px rgb(10 30 50 / .35);
+}
+.feature::before { content: ""; position: absolute; z-index: -1; left: -10%; right: -10%; top: 50%; height: 90px; transform: skewY(-7deg); background: linear-gradient(90deg, transparent, rgb(217 230 74 / .15) 30%, rgb(217 230 74 / .15) 70%, transparent); }
+.feature-kicker { margin: 0 0 12px; text-align: center; font: italic 800 13px/1 var(--font); letter-spacing: .28em; text-transform: uppercase; color: var(--ball); }
+.feature-kicker span { letter-spacing: 0; }
+.feature-card { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 14px; }
+.bill { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; text-decoration: none; }
+.bill:last-child { align-items: flex-end; text-align: right; }
+.bill:hover .bill-name { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.bill-role { font-size: 10.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.bill-rank { font: italic 800 clamp(40px, 7vw, 60px)/.9 var(--font); color: var(--ball); text-shadow: 0 3px 0 #0a1c2e; }
+.bill-name { font: italic 800 clamp(22px, 3.6vw, 34px)/1 var(--font); text-transform: uppercase; color: #fff; text-shadow: 0 3px 0 #0a1c2e; overflow-wrap: anywhere; }
+.bill-club { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.bill:last-child .bill-club { flex-direction: row-reverse; }
+.bill-facts { display: grid; grid-template-columns: repeat(4, auto); gap: 4px 16px; margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line); }
+.bill-facts span, .bill-form { display: flex; flex-direction: column; gap: 1px; }
+.bill-form { gap: 4px; }
+.bill:last-child .bill-facts span, .bill:last-child .bill-form { align-items: flex-end; }
+.bill-facts small, .bill-form small { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.bill-facts b { font-size: 16px; font-variant-numeric: tabular-nums; }
+/* A real tennis ball: felt shading and the two white seams, with VS across the middle. */
+.feature-vs { position: relative; display: grid; place-items: center; width: 72px; height: 72px; border-radius: 50%; box-shadow: 0 5px 0 #0a1c2e, 0 0 0 4px rgb(255 255 255 / .12), 0 10px 22px rgb(0 0 0 / .4); }
+.feature-vs svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.feature-vs .seam { fill: none; stroke: #fff; stroke-width: 3.2; stroke-linecap: round; opacity: .95; }
+.feature-vs span { position: relative; font: italic 800 21px/1 var(--font); color: #0c2238; text-shadow: 0 1px 0 rgb(255 255 255 / .45); }
+.feature-h2h { margin: 14px 0 0; text-align: center; font-size: 13px; color: var(--muted); }
+.feature-when { justify-content: center; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+.feature-when .due { margin-left: 0; }
+@media (max-width: 640px) {
+  .feature { padding: 14px 16px; }
+  .feature-card { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 10px; }
+  .bill, .bill:last-child { align-items: center; text-align: center; }
+  .bill:last-child .bill-club { flex-direction: row; }
+  .bill-facts span, .bill-form, .bill:last-child .bill-facts span, .bill:last-child .bill-form { align-items: center; }
+  .feature-vs { width: 56px; height: 56px; }
+  .feature-vs span { font-size: 17px; }
+}
 
 .results { list-style: none; margin: 4px 0 0; padding: 0; }
 .result { display: grid; grid-template-columns: 52px 1fr auto; gap: 4px 10px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; }

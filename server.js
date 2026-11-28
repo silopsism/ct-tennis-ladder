@@ -1,4 +1,4 @@
-// Cape Town Singles Ladder: serves the site and a small read-only API, with no dependencies.
+// Cape Town Challengers Ladder: serves the site and a small read-only API, with no dependencies.
 // The Google Sheet is read here on the server (never in the browser), so full names, phone numbers and
 // emails in it stay private: the page only ever gets display names ("David A.") and public stats.
 const http = require('http');
@@ -138,6 +138,7 @@ const FILES = {
   '/pages.js': 'text/javascript; charset=utf-8',
   '/ladder.js': 'text/javascript; charset=utf-8',
   '/favicon.svg': 'image/svg+xml',
+  '/logo.webp': 'image/webp',
 };
 
 // The page links each file with a fingerprint of its contents ("app.js?v=3f9c…"), so phones pick up a
@@ -154,7 +155,7 @@ function fingerprint(file) {
 }
 function indexHTML() {
   return fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')
-    .replace(/(href|src)="(styles\.css|app\.js|pages\.js|ladder\.js|favicon\.svg)"/g, (m, attr, f) => `${attr}="${f}?v=${fingerprint(f)}"`);
+    .replace(/(href|src)="(styles\.css|app\.js|pages\.js|ladder\.js|favicon\.svg|logo\.webp)"/g, (m, attr, f) => `${attr}="${f}?v=${fingerprint(f)}"`);
 }
 
 function send(res, status, body, type = 'application/json; charset=utf-8', headers = {}) {

@@ -115,3 +115,25 @@ test('empty sheet rows holding only an unticked checkbox are ignored', () => {
   assert.strictEqual(m.warnings.length, 0);
   assert.strictEqual(m.freezes.filter(f => !f.auto).length, 0);
 });
+
+test('Placements From: late entries before it are slotted in by the Director, with no placement match owed', () => {
+  const t = tabs();
+  t.Settings.push(['Placements From', '2027-01-01']);
+  t.Players.push(['P11', 'Late', 'Entry', 'Constantia', '2026-12-05', 3]);
+  t.Players.push(['P12', 'January', 'Joiner', 'Pinelands', '2027-01-10', 0]);
+  const m = L.build(t, '2027-01-12');
+  assert.deepStrictEqual(order(m).slice(0, 4), [1, 2, 11, 3]);
+  assert.strictEqual(m.placementDue.has('P11'), false);
+  assert.strictEqual(m.placementDue.has('P12'), true);
+});
+
+test('Move rows on the same date land exactly where written, in any row order', () => {
+  const adjustments = [
+    ['2026-10-05', P(1), 'Move to', 3, 'Reseed'],
+    ['2026-10-05', P(10), 'Move to', 1, 'Reseed'],
+    ['2026-10-05', P(5), 'Move to', 2, 'Reseed'],
+  ];
+  const m = L.build(tabs({ adjustments }), '2026-10-10');
+  assert.deepStrictEqual(order(m), [10, 5, 1, 2, 3, 4, 6, 7, 8, 9]);
+  assert.strictEqual(m.warnings.length, 0);
+});

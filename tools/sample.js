@@ -62,7 +62,7 @@ const adjustments = [
 ];
 const settings = [
   ['Setting', 'Value'],
-  ['Ladder Name', 'Cape Town Singles Ladder'],
+  ['Ladder Name', 'Cape Town Challengers Ladder'],
   ['Director', 'Fin Manjoo'],
   ['Director WhatsApp', '27794782718'],
   ['Launch Date', LAUNCH],

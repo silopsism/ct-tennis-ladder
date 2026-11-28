@@ -112,14 +112,14 @@ window.Pages = (() => {
           <p class="who">${s.director}</p>
           <p class="muted">${phone(s)}</p>
         </div>
-        <a class="btn" href="${wa(s, `Hi ${first(s)}, a question about the Cape Town Singles Ladder: `)}" target="_blank" rel="noopener">WhatsApp ${first(s)}</a>
+        <a class="btn" href="${wa(s, `Hi ${first(s)}, a question about the Cape Town Challengers Ladder: `)}" target="_blank" rel="noopener">WhatsApp ${first(s)}</a>
       </div>
     </article>`;
 
   // The official rules, word for word from the Ladder Director's document. Change the wording only with him.
   const rules = s => `
     <article class="prose rules full">
-      <p class="lede">The official rules of the Cape Town Singles Ladder. <a href="#/rules/how-it-works">How it works</a> has a short version.</p>
+      <p class="lede">The official rules of the Cape Town Challengers Ladder. <a href="#/rules/how-it-works">How it works</a> has a short version.</p>
       <nav class="toc">
         <a href="#/rules/seeding">1. Seeding</a><a href="#/rules/challenges">2. Challenges</a><a href="#/rules/format">3. Format &amp; balls</a>
         <a href="#/rules/venue">4. Venue &amp; fees</a><a href="#/rules/scheduling">5. Scheduling &amp; forfeits</a>
@@ -170,7 +170,7 @@ window.Pages = (() => {
 
       <h3 id="venue">4. Venue &amp; Visitor Fees</h3>
       <ul>
-        <li><b>Official Host Venue: Claremont Tennis Club</b> is the official host venue for the Cape Town Singles Ladder. Matches are not restricted to a specific day or social session—players may arrange to play on <b>any day and at any agreed time</b>.</li>
+        <li><b>Official Host Venue: Claremont Tennis Club</b> is the official host venue for the Cape Town Challengers Ladder. Matches are not restricted to a specific day or social session—players may arrange to play on <b>any day and at any agreed time</b>.</li>
         <li><b>Visitor Pass (R250):</b>
           <ul>
             <li><b>Non-Members of Claremont TC:</b> Pay a one-off, specially reduced <b>R250 bi-annual fee</b>, which covers <b>all visitor fees</b> for ladder matches at Claremont TC <b>for six months</b>.</li>
@@ -291,7 +291,7 @@ window.Pages = (() => {
           <p class="who">${s.director}</p>
           <p class="muted">${phone(s)}</p>
         </div>
-        <a class="btn" href="${wa(s, `Hi ${first(s)}, a question about the Cape Town Singles Ladder: `)}" target="_blank" rel="noopener">WhatsApp ${first(s)}</a>
+        <a class="btn" href="${wa(s, `Hi ${first(s)}, a question about the Cape Town Challengers Ladder: `)}" target="_blank" rel="noopener">WhatsApp ${first(s)}</a>
       </div>
     </article>`;
 
@@ -312,9 +312,9 @@ window.Pages = (() => {
       </ul>
       <h3>How to join</h3>
       <p>Send ${first(s)} a WhatsApp with your name, club, and your recent league or tournament results. He'll place you on the ladder and set up your placement match.</p>
-      <p class="cta-row"><a class="btn" href="${wa(s, `Hi ${first(s)}, I'd like to join the Cape Town Singles Ladder.\nName: \nClub: \nLeague / tournament level: `)}" target="_blank" rel="noopener">WhatsApp ${first(s)} to join</a></p>
+      <p class="cta-row"><a class="btn" href="${wa(s, `Hi ${first(s)}, I'd like to join the Cape Town Challengers Ladder.\nName: \nClub: \nLeague / tournament level: `)}" target="_blank" rel="noopener">WhatsApp ${first(s)} to join</a></p>
       <h3>Your details</h3>
-      <p class="muted">Only your first name and surname initial are shown on the site, with your club, age group and results. Your full name and contact details stay with the Ladder Director and are only used to run the ladder.</p>
+      <p class="muted">Only your first name and surname initial are shown on the site, with your club and results. Your full name and contact details stay with the Ladder Director and are only used to run the ladder.</p>
     </article>`;
 
   const credits = s => `

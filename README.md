@@ -1,4 +1,4 @@
-# Cape Town Singles Ladder
+# Cape Town Challengers Ladder
 
 Rankings, challenges and results for the men's singles ladder hosted at Claremont Tennis Club, run by the Ladder Director (Fin Manjoo). Built like ctt.salwood.co.za: no build step, no dependencies.
 
@@ -49,7 +49,7 @@ One Google Sheet (the Director's copy has a Guide tab explaining each tab to Fin
 | Display Name | Optional override for the public name. |
 | Club | Shown as a badge. Used for the club filter. |
 | Member | Y for Claremont members. Blank guesses from the club name. |
-| Birth Year | Private. Only the age group (Open, 35+, 45+, 55+, 65+) is shown. |
+| Birth Year | Optional and private. Age groups are not shown for now. |
 | Joined | Date they go on the ladder. |
 | Entry Position | Where Fin places them. Blank means the bottom. |
 | Visitor Pass Until | Non-members: when their R250 pass runs out. |
@@ -84,10 +84,10 @@ One Google Sheet (the Director's copy has a Guide tab explaining each tab to Fin
 | Column | Notes |
 |---|---|
 | Date, Player | |
-| Action | `Move to` (Spots = new position), `Drop` (Spots = places down), `Leave`, `Warning` (shown on the profile's ladder record, no movement). |
+| Action | `Move to` (Spots = new position), `Drop` (Spots = places down), `Leave`, `Warning` (shown on the profile's ladder record, no movement). All the `Move to` rows on one date are applied together, so a big reshuffle comes out exactly as written, whatever order the rows are in. |
 | Spots, Reason | |
 
-**Settings**: `Setting` / `Value` rows, all optional: Ladder Name, Director, Director WhatsApp (e.g. 27794782718), Launch Date, Challenge Range, Match Window Days, Rain Window Days, Rematch Cooldown Days, Challenge Every Days, Forfeits In A Row, Forfeit Penalty Spots, Injury Grace Days, Holiday Max Days, Holiday Every Months, Festive From, Festive To, Home Club. Festive From / To freeze everyone for the festive break without any Freezes rows.
+**Settings**: `Setting` / `Value` rows, all optional: Ladder Name, Director, Director WhatsApp (e.g. 27794782718), Launch Date, Placements From, Challenge Range, Match Window Days, Rain Window Days, Rematch Cooldown Days, Challenge Every Days, Forfeits In A Row, Forfeit Penalty Spots, Injury Grace Days, Holiday Max Days, Holiday Every Months, Festive From, Festive To, Home Club. Festive From / To freeze everyone for the festive break without any Freezes rows. Placements From is the first day a newcomer owes a placement match (blank: anyone joining after the Launch Date); before it, the Director slots late entries in with Entry Position.
 
 ## Connecting the real sheet
 
